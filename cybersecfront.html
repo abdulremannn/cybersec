@@ -1,0 +1,2070 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberForce | We Exploit Vulnerabilities Before Attackers Do</title>
+<meta name="description" content="Elite cybersecurity consultancy. Penetration testing, red team operations, threat intelligence, and incident response.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Barlow:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --black: #040508;
+  --deep: #07090f;
+  --surface: #0b0e17;
+  --surface2: #0f1320;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --green: #00ff88;
+  --green-dim: #00cc6a;
+  --green-glow: rgba(0,255,136,0.15);
+  --blue: #0af;
+  --blue-dim: #0088cc;
+  --blue-glow: rgba(0,170,255,0.12);
+  --red: #ff2e4c;
+  --red-glow: rgba(255,46,76,0.15);
+  --orange: #ff6b35;
+  --text: #e8eaf0;
+  --text-dim: #8892a4;
+  --text-muted: #4a5568;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'Barlow', sans-serif;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM CURSOR
+   FIX: removed mix-blend-mode (expensive compositing layer)
+        ring lag now handled by CSS transition instead of setTimeout
+═══════════════════════════════════════════════════════════════ */
+#cursor {
+  position: fixed;
+  width: 12px; height: 12px;
+  background: var(--green);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  will-change: left, top;
+}
+#cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border: 1px solid rgba(0,255,136,0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  /* FIX: CSS transition handles the lag visually — no setTimeout needed */
+  transition: left 0.1s ease, top 0.1s ease, width 0.2s, height 0.2s, border-color 0.2s;
+  will-change: left, top;
+}
+body:hover #cursor { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCANLINE OVERLAY
+   FIX: added will-change to isolate to its own GPU layer
+═══════════════════════════════════════════════════════════════ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9990;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOISE TEXTURE
+   FIX: added will-change to isolate to its own GPU layer
+═══════════════════════════════════════════════════════════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9989;
+  opacity: 0.4;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  height: 72px;
+  background: rgba(4,5,8,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+nav.scrolled {
+  background: rgba(4,5,8,0.97);
+  border-bottom-color: var(--border2);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.nav-logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--green-glow); }
+  50% { box-shadow: 0 0 20px 4px var(--green-glow); }
+}
+.nav-logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--text);
+}
+.nav-logo-text span { color: var(--green); }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  text-decoration: none;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a::before {
+  content: '//';
+  color: var(--green);
+  margin-right: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.nav-links a:hover { color: var(--green); }
+.nav-links a:hover::before { opacity: 1; }
+.nav-cta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--green);
+  padding: 10px 24px;
+  border: none;
+  cursor: none;
+  text-decoration: none;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  transition: all 0.2s;
+  font-weight: 600;
+}
+.nav-cta:hover {
+  background: var(--text);
+  transform: translateY(-1px);
+}
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO SECTION
+═══════════════════════════════════════════════════════════════ */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 120px 48px 80px;
+}
+
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-drift 20s linear infinite;
+  will-change: transform;
+}
+@keyframes grid-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(60px); }
+}
+
+/* FIX: will-change on glow elements to promote to own compositing layer */
+.hero-glow {
+  position: absolute;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+  top: 50%; left: 30%;
+  transform: translate(-50%, -50%);
+  animation: glow-breathe 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.hero-glow2 {
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(0,170,255,0.04) 0%, transparent 70%);
+  top: 30%; left: 70%;
+  transform: translate(-50%, -50%);
+}
+@keyframes glow-breathe {
+  0%,100%{opacity:0.6; transform:translate(-50%,-50%) scale(1)}
+  50%{opacity:1; transform:translate(-50%,-50%) scale(1.1)}
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fade-up 0.8s 0.2s forwards;
+}
+.hero-tag::before {
+  content: '';
+  width: 40px; height: 1px;
+  background: var(--green);
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 9vw, 128px);
+  line-height: 0.92;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fade-up 0.8s 0.4s forwards;
+}
+.hero-headline .accent { color: var(--green); }
+.hero-headline .line2 {
+  -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+  color: transparent;
+}
+
+.hero-sub {
+  font-size: 18px;
+  font-weight: 300;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fade-up 0.8s 0.6s forwards;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fade-up 0.8s 0.8s forwards;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--green);
+  padding: 16px 32px;
+  text-decoration: none;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  transition: all 0.2s;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+.btn-primary:hover::after { transform: translateX(100%); }
+.btn-primary:hover { background: #00ffaa; transform: translateY(-2px); box-shadow: 0 12px 40px var(--green-glow); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  padding: 15px 32px;
+  text-decoration: none;
+  border: 1px solid var(--border2);
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  transition: all 0.2s;
+}
+.btn-secondary:hover {
+  color: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-visual {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 560px;
+  opacity: 0;
+  animation: slide-in-right 1s 0.5s forwards;
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateY(-50%) translateX(60px); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.dashboard-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,0.8), 0 0 60px var(--green-glow);
+  position: relative;
+}
+.dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--deep);
+}
+.dash-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.dash-dots { display: flex; gap: 6px; }
+.dash-dot { width: 8px; height: 8px; border-radius: 50%; }
+.dash-dot.r { background: var(--red); }
+.dash-dot.y { background: var(--orange); }
+.dash-dot.g { background: var(--green); }
+
+.dash-body { padding: 20px; }
+
+.threat-grid {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 3px;
+  margin-bottom: 20px;
+}
+.threat-cell {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--surface2);
+  transition: background 0.3s;
+}
+.threat-cell.low { background: rgba(255,107,53,0.3); }
+.threat-cell.med { background: rgba(255,107,53,0.6); }
+.threat-cell.high { background: rgba(255,46,76,0.8); }
+.threat-cell.critical { background: var(--red); box-shadow: 0 0 6px var(--red-glow); }
+
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.dash-metric {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.dash-metric::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--green);
+}
+.dash-metric.red::before { background: var(--red); }
+.dash-metric.blue::before { background: var(--blue); }
+.dm-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+.dm-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+.dm-change {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--green);
+  margin-top: 6px;
+}
+.dm-change.up { color: var(--red); }
+
+.scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+  opacity: 0.6;
+  animation: scan 3s linear infinite;
+  will-change: top;
+}
+@keyframes scan {
+  0% { top: 0; opacity: 0; }
+  5% { opacity: 0.6; }
+  95% { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.dash-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.alert-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--deep);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--green);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  animation: alert-flash 4s ease-in-out infinite;
+}
+.alert-item.critical { border-left-color: var(--red); animation-delay: 0.5s; }
+.alert-item.warning { border-left-color: var(--orange); animation-delay: 1s; }
+@keyframes alert-flash {
+  0%,100%{ background: var(--deep); }
+  50%{ background: rgba(0,255,136,0.03); }
+}
+.alert-item.critical { animation-name: alert-flash-red; }
+@keyframes alert-flash-red {
+  0%,100%{ background: var(--deep); }
+  50%{ background: rgba(255,46,76,0.05); }
+}
+.alert-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: blink 1.5s ease-in-out infinite;
+}
+.alert-item.critical .alert-dot { background: var(--red); animation-duration: 0.8s; }
+.alert-item.warning .alert-dot { background: var(--orange); }
+.alert-time { margin-left: auto; color: var(--text-muted); }
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  animation: fade-up 1s 1.5s both;
+}
+.scroll-line {
+  width: 1px; height: 40px;
+  background: linear-gradient(var(--green), transparent);
+  animation: scroll-line 2s ease-in-out infinite;
+}
+@keyframes scroll-line {
+  0%,100% { height: 40px; opacity: 1; }
+  50% { height: 60px; opacity: 0.4; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATS SECTION
+═══════════════════════════════════════════════════════════════ */
+#stats {
+  padding: 100px 48px;
+  background: var(--deep);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+#stats::before {
+  content: 'THREAT LANDSCAPE 2024';
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 180px;
+  color: rgba(255,255,255,0.015);
+  letter-spacing: 10px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.stats-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.section-label::before, .section-label::after {
+  content: '';
+  width: 40px; height: 1px;
+  background: var(--green);
+  opacity: 0.5;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6vw, 80px);
+  letter-spacing: 2px;
+  line-height: 1;
+  color: var(--text);
+}
+.section-title .dim {
+  -webkit-text-stroke: 1px rgba(255,255,255,0.15);
+  color: transparent;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.stat-card {
+  background: var(--surface);
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+}
+.stat-card:hover { background: var(--surface2); }
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--green), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.stat-card:hover::before { opacity: 1; }
+
+.stat-icon {
+  font-size: 24px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+.stat-num {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 5vw, 72px);
+  letter-spacing: 2px;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.stat-num.red { color: var(--red); }
+.stat-num.blue { color: var(--blue); }
+.stat-num.orange { color: var(--orange); }
+.stat-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  font-weight: 300;
+}
+.stat-source {
+  position: absolute;
+  bottom: 16px;
+  right: 20px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SERVICES SECTION
+═══════════════════════════════════════════════════════════════ */
+#services {
+  padding: 120px 48px;
+  position: relative;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.service-card {
+  background: var(--surface);
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: none;
+  border: 1px solid transparent;
+}
+.service-card:hover {
+  background: var(--surface2);
+  border-color: rgba(0,255,136,0.1);
+  transform: translateY(-4px);
+}
+.service-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--green-glow) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.service-card:hover::after { opacity: 1; }
+
+.service-num {
+  font-family: var(--font-display);
+  font-size: 72px;
+  color: rgba(255,255,255,0.04);
+  line-height: 1;
+  margin-bottom: -24px;
+  letter-spacing: 2px;
+}
+.service-icon-wrap {
+  width: 52px; height: 52px;
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  position: relative;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  background: var(--deep);
+  transition: all 0.3s;
+}
+.service-card:hover .service-icon-wrap {
+  background: var(--green);
+  border-color: var(--green);
+}
+.service-card:hover .service-icon-wrap svg { color: var(--black); }
+.service-icon-wrap svg {
+  width: 22px; height: 22px;
+  color: var(--green);
+  transition: color 0.3s;
+}
+
+.service-name {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.service-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 28px;
+}
+.service-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.service-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.2);
+  padding: 5px 12px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.service-card:hover .service-tag {
+  border-color: rgba(0,255,136,0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   METHODOLOGY SECTION
+═══════════════════════════════════════════════════════════════ */
+#methodology {
+  padding: 120px 48px;
+  background: var(--deep);
+  border-top: 1px solid var(--border);
+}
+
+.methodology-timeline {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+  position: relative;
+}
+.methodology-timeline::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: 36px;
+  right: 36px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--green), var(--blue), var(--green));
+  opacity: 0.3;
+}
+
+.method-step {
+  text-align: center;
+  padding: 0 12px;
+  position: relative;
+}
+.method-num-wrap {
+  width: 72px; height: 72px;
+  margin: 0 auto 24px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  transition: all 0.3s;
+}
+.method-step:hover .method-num-wrap {
+  background: var(--green);
+  border-color: var(--green);
+}
+.method-step:hover .method-num { color: var(--black); }
+.method-num {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--green);
+  letter-spacing: 1px;
+  transition: color 0.3s;
+}
+.method-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INDUSTRIES SECTION
+═══════════════════════════════════════════════════════════════ */
+#industries {
+  padding: 120px 48px;
+}
+
+.industries-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.industry-card {
+  background: var(--surface);
+  padding: 36px 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: none;
+}
+.industry-card:hover {
+  background: var(--surface2);
+  transform: scale(1.02);
+}
+.industry-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  transform: scaleX(0);
+  transition: transform 0.3s;
+}
+.industry-card:hover::before { transform: scaleX(1); }
+
+.industry-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+  display: block;
+}
+.industry-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.industry-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WHY US SECTION
+═══════════════════════════════════════════════════════════════ */
+#why {
+  padding: 120px 48px;
+  background: var(--deep);
+  border-top: 1px solid var(--border);
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.why-list { display: flex; flex-direction: column; gap: 2px; }
+
+.why-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 28px 32px;
+  background: var(--surface);
+  border-left: 2px solid transparent;
+  transition: all 0.3s;
+  cursor: none;
+}
+.why-item:hover {
+  background: var(--surface2);
+  border-left-color: var(--green);
+  transform: translateX(4px);
+}
+.why-num {
+  font-family: var(--font-display);
+  font-size: 36px;
+  color: var(--green);
+  letter-spacing: 1px;
+  opacity: 0.4;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: opacity 0.3s;
+}
+.why-item:hover .why-num { opacity: 1; }
+.why-text-title {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.why-text-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.console-widget {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.console-header {
+  background: var(--deep);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.console-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  margin-left: auto;
+}
+.console-body {
+  padding: 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 2;
+}
+.console-line { display: flex; gap: 12px; }
+.console-prompt { color: var(--green); flex-shrink: 0; }
+.console-cmd { color: var(--text-dim); }
+.console-output { color: var(--text-muted); padding-left: 24px; }
+.console-output.success { color: var(--green); }
+.console-output.warn { color: var(--orange); }
+.console-output.danger { color: var(--red); }
+.cursor-blink {
+  display: inline-block;
+  width: 8px; height: 14px;
+  background: var(--green);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE THREAT FEED
+═══════════════════════════════════════════════════════════════ */
+#threat-feed {
+  padding: 60px 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.threat-ticker {
+  display: flex;
+  gap: 60px;
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+  will-change: transform;
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.ticker-dot { width: 6px; height: 6px; border-radius: 50%; }
+.ticker-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.ticker-dot.orange { background: var(--orange); }
+.ticker-dot.green { background: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   NETWORK VISUALIZATION
+═══════════════════════════════════════════════════════════════ */
+#network {
+  padding: 120px 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.network-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+#network-canvas {
+  width: 100%;
+  height: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.network-info { }
+.network-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.network-stat:last-child { border-bottom: none; }
+.ns-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.ns-val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 1px;
+}
+.ns-val.green { color: var(--green); }
+.ns-val.red { color: var(--red); }
+.ns-val.blue { color: var(--blue); }
+.ns-bar {
+  width: 100%;
+  height: 3px;
+  background: var(--border2);
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.ns-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  animation: bar-expand 2s ease-out forwards;
+}
+@keyframes bar-expand {
+  from { width: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CTA SECTION
+═══════════════════════════════════════════════════════════════ */
+#cta {
+  padding: 140px 48px;
+  text-align: center;
+  background: var(--deep);
+  border-top: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+#cta::before {
+  content: '';
+  position: absolute;
+  width: 1000px; height: 1000px;
+  background: radial-gradient(circle, rgba(0,255,136,0.05) 0%, transparent 60%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.cta-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.cta-label::before, .cta-label::after {
+  content: '';
+  width: 60px; height: 1px;
+  background: var(--red);
+  opacity: 0.5;
+}
+.cta-headline {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 8vw, 100px);
+  line-height: 0.95;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 28px;
+}
+.cta-sub {
+  font-size: 18px;
+  color: var(--text-dim);
+  font-weight: 300;
+  max-width: 500px;
+  margin: 0 auto 48px;
+  line-height: 1.6;
+}
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTACT / FOOTER
+═══════════════════════════════════════════════════════════════ */
+#contact {
+  padding: 80px 48px;
+  background: var(--surface);
+  border-top: 1px solid var(--border2);
+}
+
+.contact-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 60px;
+}
+
+.contact-brand .nav-logo-text {
+  font-size: 28px;
+  margin-bottom: 16px;
+  display: block;
+}
+.contact-tagline {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  font-weight: 300;
+}
+.contact-section-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.contact-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.contact-links a {
+  font-size: 14px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-weight: 300;
+}
+.contact-links a:hover { color: var(--green); }
+
+.contact-info { display: flex; flex-direction: column; gap: 14px; }
+.contact-info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.contact-info-item a { color: var(--text-dim); text-decoration: none; }
+.contact-info-item a:hover { color: var(--green); }
+
+.footer-bottom {
+  max-width: 1100px;
+  margin: 60px auto 0;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-copy {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.footer-tagline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.footer-tagline span { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL ANIMATIONS
+═══════════════════════════════════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+.reveal-delay-5 { transition-delay: 0.5s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  nav { padding: 0 24px; }
+  .nav-links { display: none; }
+  #hero { padding: 120px 24px 80px; }
+  .hero-visual { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .services-grid { grid-template-columns: 1fr; }
+  .methodology-timeline { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .methodology-timeline::before { display: none; }
+  .industries-grid { grid-template-columns: repeat(2, 1fr); }
+  .why-grid { grid-template-columns: 1fr; }
+  .network-container { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+}
+@media (max-width: 600px) {
+  #hero { padding: 100px 20px 60px; }
+  #stats, #services, #methodology, #industries, #why, #network, #cta { padding: 80px 20px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .industries-grid { grid-template-columns: 1fr 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  #contact { padding: 60px 20px; }
+  .methodology-timeline { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Glitch effect */
+@keyframes glitch {
+  0% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); }
+  25% { text-shadow: -2px 0 var(--red), 2px 0 var(--blue); }
+  50% { text-shadow: 2px 2px var(--red), -2px -2px var(--blue); }
+  75% { text-shadow: 0 0 transparent; }
+  100% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); }
+}
+.glitch:hover { animation: glitch 0.3s ease infinite; }
+
+/* Marquee */
+.marquee-container {
+  overflow: hidden;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--deep);
+}
+.marquee {
+  display: flex;
+  gap: 48px;
+  animation: marquee 20s linear infinite;
+  width: max-content;
+  will-change: transform;
+}
+.marquee-item {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  white-space: nowrap;
+}
+.marquee-item::after {
+  content: '◆';
+  color: var(--green);
+  font-size: 8px;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon"></div>
+    <span class="nav-logo-text">CYBER<span>FORCE</span></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#methodology">Methodology</a></li>
+    <li><a href="#industries">Industries</a></li>
+    <li><a href="#why">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:24px;">
+    <div class="nav-status">
+      <div class="status-dot"></div>
+      SYSTEMS OPERATIONAL
+    </div>
+    <a href="#contact" class="nav-cta">Secure Assessment</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag">Elite Cybersecurity Operations Center</div>
+    <h1 class="hero-headline">
+      WE EXPLOIT<br>
+      <span class="accent">VULNERABILITIES</span><br>
+      <span style="font-size:0.45em;color:var(--text-dim);letter-spacing:8px;font-weight:300;">BEFORE ATTACKERS DO.</span>
+    </h1>
+    <p class="hero-sub">We identify, validate, and eliminate security weaknesses before cybercriminals discover them. Penetration testing, red team operations, and threat intelligence for the modern threat landscape.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Request Security Assessment
+      </a>
+      <a href="#services" class="btn-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Explore Services
+      </a>
+    </div>
+  </div>
+
+  <!-- Dashboard Visual -->
+  <div class="hero-visual">
+    <div class="dashboard-card">
+      <div class="scan-line"></div>
+      <div class="dash-header">
+        <div class="dash-dots">
+          <div class="dash-dot r"></div>
+          <div class="dash-dot y"></div>
+          <div class="dash-dot g"></div>
+        </div>
+        <div class="dash-title">THREAT INTELLIGENCE DASHBOARD</div>
+      </div>
+      <div class="dash-body">
+        <div class="threat-grid" id="threatGrid"></div>
+        <div class="dash-metrics">
+          <div class="dash-metric">
+            <div class="dm-val" id="dm1">0</div>
+            <div class="dm-label">THREATS BLOCKED</div>
+            <div class="dm-change">▲ 12% today</div>
+          </div>
+          <div class="dash-metric red">
+            <div class="dm-val" id="dm2">0</div>
+            <div class="dm-label">CRITICAL ALERTS</div>
+            <div class="dm-change up">▲ ACTIVE</div>
+          </div>
+          <div class="dash-metric blue">
+            <div class="dm-val" id="dm3">0</div>
+            <div class="dm-label">ASSETS SCANNED</div>
+            <div class="dm-change">▼ 2% variance</div>
+          </div>
+        </div>
+        <div class="dash-alerts">
+          <div class="alert-item critical">
+            <div class="alert-dot"></div>
+            <span>SQL Injection attempt on /api/auth endpoint</span>
+            <span class="alert-time">00:03</span>
+          </div>
+          <div class="alert-item warning">
+            <div class="alert-dot"></div>
+            <span>Brute-force detected — 10.0.1.47</span>
+            <span class="alert-time">00:11</span>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot"></div>
+            <span>Vulnerability patched — CVE-2024-1337</span>
+            <span class="alert-time">00:24</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    SCROLL
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-container">
+  <div class="marquee">
+    <div class="marquee-item">Penetration Testing</div>
+    <div class="marquee-item">Red Team Operations</div>
+    <div class="marquee-item">Threat Intelligence</div>
+    <div class="marquee-item">Incident Response</div>
+    <div class="marquee-item">Vulnerability Assessment</div>
+    <div class="marquee-item">Digital Forensics</div>
+    <div class="marquee-item">Dark Web Monitoring</div>
+    <div class="marquee-item">Cloud Security</div>
+    <div class="marquee-item">Penetration Testing</div>
+    <div class="marquee-item">Red Team Operations</div>
+    <div class="marquee-item">Threat Intelligence</div>
+    <div class="marquee-item">Incident Response</div>
+    <div class="marquee-item">Vulnerability Assessment</div>
+    <div class="marquee-item">Digital Forensics</div>
+    <div class="marquee-item">Dark Web Monitoring</div>
+    <div class="marquee-item">Cloud Security</div>
+  </div>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<section id="stats">
+  <div class="stats-header reveal">
+    <div class="section-label">FBI IC3 Report 2023</div>
+    <h2 class="section-title">THE THREAT <span class="dim">LANDSCAPE</span></h2>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card reveal">
+      <div class="stat-icon"></div>
+      <div class="stat-num counter" data-target="125" data-suffix="B+">0</div>
+      <div class="stat-label">Projected global cybercrime cost in 2025, surpassing national GDPs</div>
+      <div class="stat-source">// WEF GLOBAL RISK REPORT</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-1">
+      <div class="stat-icon"></div>
+      <div class="stat-num red counter" data-target="298" data-suffix="K+">0</div>
+      <div class="stat-label">Phishing complaints reported in 2023, growing 12% year over year</div>
+      <div class="stat-source">// FBI IC3 2023</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-2">
+      <div class="stat-icon"></div>
+      <div class="stat-num blue counter" data-target="22" data-suffix="K+">0</div>
+      <div class="stat-label">AI-enabled cybercrime incidents reported in the last 12 months</div>
+      <div class="stat-source">// EUROPOL 2024</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-3">
+      <div class="stat-icon"></div>
+      <div class="stat-num orange counter" data-target="3" data-suffix="B+">0</div>
+      <div class="stat-label">Lost to Business Email Compromise (BEC) attacks in 2023 alone</div>
+      <div class="stat-source">// FBI IC3 2023</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-4">
+      <div class="stat-icon"></div>
+      <div class="stat-num counter" data-target="277" data-suffix=" days">0</div>
+      <div class="stat-label">Average time to identify a data breach — nearly a full year of exposure</div>
+      <div class="stat-source">// IBM COST OF BREACH 2024</div>
+    </div>
+    <div class="stat-card reveal reveal-delay-5">
+      <div class="stat-icon"></div>
+      <div class="stat-num red counter" data-target="200" data-suffix="+">0</div>
+      <div class="stat-label">Countries affected by major cyberattacks — no organization is immune</div>
+      <div class="stat-source">// INTERPOL 2024</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LIVE THREAT FEED ═══ -->
+<div id="threat-feed">
+  <div class="threat-ticker" id="ticker">
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — Ransomware campaign targeting healthcare sector detected</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — New zero-day exploit circulating in dark web forums</div>
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — APT group targeting financial institutions via supply chain</div>
+    <div class="ticker-item"><span class="ticker-dot green"></span>INFO — CVE-2024-0001 patched by vendor — update recommended</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — Phishing campaign impersonating government agencies active</div>
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — SQL injection campaign hitting e-commerce platforms</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — Credential stuffing attacks surge 340% this quarter</div>
+    <div class="ticker-item"><span class="ticker-dot green"></span>INFO — New threat intelligence feed integrated — coverage expanded</div>
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — Ransomware campaign targeting healthcare sector detected</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — New zero-day exploit circulating in dark web forums</div>
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — APT group targeting financial institutions via supply chain</div>
+    <div class="ticker-item"><span class="ticker-dot green"></span>INFO — CVE-2024-0001 patched by vendor — update recommended</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — Phishing campaign impersonating government agencies active</div>
+    <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — SQL injection campaign hitting e-commerce platforms</div>
+    <div class="ticker-item"><span class="ticker-dot orange"></span>HIGH — Credential stuffing attacks surge 340% this quarter</div>
+    <div class="ticker-item"><span class="ticker-dot green"></span>INFO — New threat intelligence feed integrated — coverage expanded</div>
+  </div>
+</div>
+
+<!-- ═══ SERVICES ═══ -->
+<section id="services">
+  <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
+    <div class="section-label">What We Do</div>
+    <h2 class="section-title">OUR <span class="dim">SERVICES</span></h2>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-num">01</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <div class="service-name">PENETRATION TESTING</div>
+      <div class="service-desc">We simulate real-world attacks against your web applications, APIs, mobile apps, cloud infrastructure, and internal networks — finding what attackers would find, before they do.</div>
+      <div class="service-tags">
+        <span class="service-tag">Web Apps</span>
+        <span class="service-tag">APIs</span>
+        <span class="service-tag">Mobile</span>
+        <span class="service-tag">Cloud</span>
+        <span class="service-tag">Networks</span>
+      </div>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <div class="service-num">02</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      </div>
+      <div class="service-name">RED TEAM OPERATIONS</div>
+      <div class="service-desc">Full-scope adversarial simulations that test your people, processes, and technology simultaneously. We think like APT groups to validate your true security posture.</div>
+      <div class="service-tags">
+        <span class="service-tag">Adversary Sim</span>
+        <span class="service-tag">Social Engineering</span>
+        <span class="service-tag">Physical</span>
+      </div>
+    </div>
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-num">03</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6l10.5 6L22 6"/><rect x="1" y="4" width="21" height="16" rx="2"/></svg>
+      </div>
+      <div class="service-name">THREAT INTELLIGENCE</div>
+      <div class="service-desc">Proactive monitoring of threat actors, dark web marketplaces, and intelligence feeds. We track adversaries so you're never blindsided by emerging attack campaigns.</div>
+      <div class="service-tags">
+        <span class="service-tag">Threat Hunting</span>
+        <span class="service-tag">Dark Web</span>
+        <span class="service-tag">IOC Monitoring</span>
+      </div>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-num">04</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="service-name">INCIDENT RESPONSE</div>
+      <div class="service-desc">When breaches happen, speed is survival. Our DFIR team deploys rapidly to contain threats, preserve evidence, investigate root causes, and restore operations.</div>
+      <div class="service-tags">
+        <span class="service-tag">DFIR</span>
+        <span class="service-tag">Forensics</span>
+        <span class="service-tag">Recovery</span>
+      </div>
+    </div>
+    <div class="service-card reveal reveal-delay-1">
+      <div class="service-num">05</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+      </div>
+      <div class="service-name">VULNERABILITY ASSESSMENT</div>
+      <div class="service-desc">Systematic identification and risk-prioritized analysis of vulnerabilities across your attack surface. We provide actionable remediation roadmaps, not just raw reports.</div>
+      <div class="service-tags">
+        <span class="service-tag">Risk Scoring</span>
+        <span class="service-tag">Asset Inventory</span>
+        <span class="service-tag">Remediation</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ METHODOLOGY ═══ -->
+<section id="methodology">
+  <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
+    <div class="section-label">Our Process</div>
+    <h2 class="section-title">HOW WE <span class="dim">OPERATE</span></h2>
+  </div>
+  <div class="methodology-timeline">
+    <div class="method-step reveal"><div class="method-num-wrap"><div class="method-num">01</div></div><div class="method-title">Reconnaissance</div></div>
+    <div class="method-step reveal reveal-delay-1"><div class="method-num-wrap"><div class="method-num">02</div></div><div class="method-title">Assessment</div></div>
+    <div class="method-step reveal reveal-delay-2"><div class="method-num-wrap"><div class="method-num">03</div></div><div class="method-title">Exploitation</div></div>
+    <div class="method-step reveal reveal-delay-3"><div class="method-num-wrap"><div class="method-num">04</div></div><div class="method-title">Validation</div></div>
+    <div class="method-step reveal reveal-delay-4"><div class="method-num-wrap"><div class="method-num">05</div></div><div class="method-title">Reporting</div></div>
+    <div class="method-step reveal reveal-delay-5"><div class="method-num-wrap"><div class="method-num">06</div></div><div class="method-title">Remediation</div></div>
+    <div class="method-step reveal" style="transition-delay:0.6s;"><div class="method-num-wrap"><div class="method-num">07</div></div><div class="method-title">Retesting</div></div>
+  </div>
+</section>
+
+<!-- ═══ INDUSTRIES ═══ -->
+<section id="industries">
+  <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
+    <div class="section-label">Verticals</div>
+    <h2 class="section-title">INDUSTRIES WE <span class="dim">PROTECT</span></h2>
+  </div>
+  <div class="industries-grid">
+    <div class="industry-card reveal"><span class="industry-icon"></span><div class="industry-name">FINANCE</div><div class="industry-desc">Banks & Capital Markets</div></div>
+    <div class="industry-card reveal reveal-delay-1"><span class="industry-icon"></span><div class="industry-name">HEALTHCARE</div><div class="industry-desc">HIPAA Compliance & PHI</div></div>
+    <div class="industry-card reveal reveal-delay-2"><span class="industry-icon"></span><div class="industry-name">GOVERNMENT</div><div class="industry-desc">Federal & Defense Contractors</div></div>
+    <div class="industry-card reveal reveal-delay-3"><span class="industry-icon"></span><div class="industry-name">MANUFACTURING</div><div class="industry-desc">OT/ICS Security</div></div>
+    <div class="industry-card reveal"><span class="industry-icon"></span><div class="industry-name">TECHNOLOGY</div><div class="industry-desc">Cloud, SaaS & Software</div></div>
+    <div class="industry-card reveal reveal-delay-1"><span class="industry-icon"></span><div class="industry-name">DEFENSE</div><div class="industry-desc">CMMC & DFARS Compliance</div></div>
+    <div class="industry-card reveal reveal-delay-2"><span class="industry-icon"></span><div class="industry-name">RETAIL</div><div class="industry-desc">PCI-DSS & E-commerce</div></div>
+    <div class="industry-card reveal reveal-delay-3"><span class="industry-icon"></span><div class="industry-name">CRITICAL INFRA</div><div class="industry-desc">Energy & Utilities</div></div>
+  </div>
+</section>
+
+<!-- ═══ WHY US ═══ -->
+<section id="why">
+  <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
+    <div class="section-label">Differentiators</div>
+    <h2 class="section-title">WHY <span class="dim">CHOOSE US</span></h2>
+  </div>
+  <div class="why-grid">
+    <div class="why-list">
+      <div class="why-item reveal">
+        <div class="why-num">01</div>
+        <div>
+          <div class="why-text-title">Security-First Methodology</div>
+          <div class="why-text-desc">Every engagement follows a rigorous, structured approach aligned with PTES, OWASP, NIST, and MITRE ATT&CK frameworks — not ad-hoc scanning.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-1">
+        <div class="why-num">02</div>
+        <div>
+          <div class="why-text-title">Real-World Attack Simulation</div>
+          <div class="why-text-desc">We use the same tools, techniques, and procedures as advanced threat actors — not just automated scanners — to find what others miss.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-2">
+        <div class="why-num">03</div>
+        <div>
+          <div class="why-text-title">Actionable Intelligence Reports</div>
+          <div class="why-text-desc">Our reports are designed for both executives and engineers. Clear risk ratings, business impact analysis, and step-by-step remediation guidance.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-3">
+        <div class="why-num">04</div>
+        <div>
+          <div class="why-text-title">Rapid Response Capability</div>
+          <div class="why-text-desc">Breach in progress? Our incident response team is on call 24/7 with a 4-hour SLA to begin containment and investigation.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-4">
+        <div class="why-num">05</div>
+        <div>
+          <div class="why-text-title">Experienced Operators</div>
+          <div class="why-text-desc">Our team includes former government security professionals, OSCP/OSEP-certified researchers, and experienced threat hunters with real-world campaign experience.</div>
+        </div>
+      </div>
+    </div>
+    <div class="console-widget reveal reveal-delay-2">
+      <div class="console-header">
+        <div class="dash-dots">
+          <div class="dash-dot r"></div>
+          <div class="dash-dot y"></div>
+          <div class="dash-dot g"></div>
+        </div>
+        <div class="console-title">PENTEST_REPORT.SH</div>
+      </div>
+      <div class="console-body" id="consoleBody">
+        <div class="console-line"><span class="console-prompt">$</span><span class="console-cmd">./scan --target acme-corp.com --full</span></div>
+        <div class="console-output">Initializing reconnaissance module...</div>
+        <div class="console-output success">✓ 247 subdomains discovered</div>
+        <div class="console-output success">✓ Port scan complete — 18 services found</div>
+        <div class="console-output warn">⚠ Outdated Apache/2.4.49 on port 443</div>
+        <div class="console-output danger">✗ CVE-2021-41773 — Path traversal CONFIRMED</div>
+        <div class="console-output danger">✗ Unauthenticated RCE possible</div>
+        <div class="console-output warn">⚠ Default credentials on admin panel</div>
+        <div class="console-output success">✓ Report generated — critical_findings.pdf</div>
+        <div class="console-line" style="margin-top:12px;"><span class="console-prompt">$</span><span class="console-cmd">./remediate --priority critical</span></div>
+        <div class="console-output">Generating patch recommendations...</div>
+        <div class="console-line"><span class="console-prompt">$</span><span class="cursor-blink"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NETWORK VISUALIZATION ═══ -->
+<section id="network">
+  <div class="network-container">
+    <div>
+      <div class="section-label reveal" style="justify-content:flex-start;">Real-Time Monitoring</div>
+      <h2 class="section-title reveal" style="margin-bottom:48px;">NETWORK <span class="dim">TOPOLOGY</span></h2>
+      <div class="network-info">
+        <div class="network-stat reveal">
+          <div><div class="ns-label">ACTIVE NODES MONITORED</div><div class="ns-bar"><div class="ns-bar-fill" style="width:82%;"></div></div></div>
+          <div class="ns-val green">1,247</div>
+        </div>
+        <div class="network-stat reveal reveal-delay-1">
+          <div><div class="ns-label">THREATS INTERCEPTED</div><div class="ns-bar"><div class="ns-bar-fill" style="width:45%;background:linear-gradient(90deg,var(--red),var(--orange))"></div></div></div>
+          <div class="ns-val red">38</div>
+        </div>
+        <div class="network-stat reveal reveal-delay-2">
+          <div><div class="ns-label">ENDPOINTS SECURED</div><div class="ns-bar"><div class="ns-bar-fill" style="width:94%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div></div>
+          <div class="ns-val blue">94%</div>
+        </div>
+        <div class="network-stat reveal reveal-delay-3">
+          <div><div class="ns-label">MEAN TIME TO DETECT</div><div class="ns-bar"><div class="ns-bar-fill" style="width:30%;background:linear-gradient(90deg,var(--green),transparent)"></div></div></div>
+          <div class="ns-val green">4.2m</div>
+        </div>
+      </div>
+    </div>
+    <div id="network-canvas" class="reveal reveal-delay-2">
+      <canvas id="netCanvas" style="width:100%;height:100%;"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section id="cta">
+  <div class="cta-label">Urgent Action Required</div>
+  <h2 class="cta-headline glitch">KNOW YOUR<br>VULNERABILITIES<br>BEFORE ATTACKERS DO.</h2>
+  <p class="cta-sub">Every day without a security assessment is a day attackers have a head start. Don't wait for a breach to find out where you're exposed.</p>
+  <div class="cta-buttons">
+    <a href="mailto:security@cyberforce.io" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Contact Security Team
+    </a>
+    <a href="#contact" class="btn-secondary">Schedule Consultation</a>
+  </div>
+</section>
+
+<!-- ═══ CONTACT / FOOTER ═══ -->
+<footer id="contact">
+  <div class="contact-grid">
+    <div class="contact-brand">
+      <a href="#" class="nav-logo" style="margin-bottom:20px;display:inline-flex;text-decoration:none;">
+        <div class="nav-logo-icon" style="margin-right:12px;"></div>
+        <span class="nav-logo-text" style="font-size:24px;color:var(--text);">CYBER<span style="color:var(--green);">FORCE</span></span>
+      </a>
+      <p class="contact-tagline">Elite cybersecurity operations protecting organizations from advanced persistent threats, zero-days, and modern adversaries.</p>
+    </div>
+    <div>
+      <div class="contact-section-title">Navigation</div>
+      <ul class="contact-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+        <li><a href="#industries">Industries</a></li>
+        <li><a href="#why">Why Choose Us</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="contact-section-title">Services</div>
+      <ul class="contact-links">
+        <li><a href="#">Penetration Testing</a></li>
+        <li><a href="#">Red Team Operations</a></li>
+        <li><a href="#">Threat Intelligence</a></li>
+        <li><a href="#">Incident Response</a></li>
+        <li><a href="#">Vulnerability Assessment</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="contact-section-title">Contact</div>
+      <div class="contact-info">
+        <div class="contact-info-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <a href="mailto:security@cyberforce.io">security@cyberforce.io</a>
+        </div>
+        <div class="contact-info-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <a href="tel:+1-800-CYBERFORCE">+1-800-CYBERFORCE</a>
+        </div>
+        <div class="contact-info-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          <a href="#">linkedin.com/company/cyberforce</a>
+        </div>
+        <div class="contact-info-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <a href="#">Schedule on Calendly</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2024 CYBERFORCE SECURITY. ALL RIGHTS RESERVED.</div>
+    <div class="footer-tagline">BUILT WITH <span>PRECISION</span> FOR THE MODERN THREAT LANDSCAPE</div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CURSOR
+   FIX 1: rAF throttle instead of mousemove directly writing styles
+   FIX 2: ring lag handled by CSS transition — no setTimeout
+   FIX 3: removed mix-blend-mode from CSS
+═══════════════════════════════════════════════════════════════ */
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let cursorTicking = false;
+let cursorX = 0, cursorY = 0;
+
+document.addEventListener('mousemove', e => {
+  cursorX = e.clientX;
+  cursorY = e.clientY;
+  if (!cursorTicking) {
+    requestAnimationFrame(() => {
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top  = cursorY + 'px';
+      ring.style.left   = cursorX + 'px';
+      ring.style.top    = cursorY + 'px';
+      cursorTicking = false;
+    });
+    cursorTicking = true;
+  }
+});
+
+document.querySelectorAll('a, button, .service-card, .industry-card, .why-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '20px';
+    cursor.style.height = '20px';
+    ring.style.width = '56px';
+    ring.style.height = '56px';
+    ring.style.borderColor = 'rgba(0,255,136,0.6)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '12px';
+    cursor.style.height = '12px';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+    ring.style.borderColor = 'rgba(0,255,136,0.4)';
+  });
+});
+
+/* ═══ NAV SCROLL ═══ */
+const navbar = document.getElementById('navbar');
+let scrollTicking = false;
+window.addEventListener('scroll', () => {
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   THREAT HEATMAP
+   FIX: cache cells array once — no DOM query inside interval
+═══════════════════════════════════════════════════════════════ */
+const grid = document.getElementById('threatGrid');
+const levels = ['', '', '', 'low', 'low', 'med', 'high', 'critical'];
+for (let i = 0; i < 160; i++) {
+  const cell = document.createElement('div');
+  cell.className = 'threat-cell ' + levels[Math.floor(Math.random() * levels.length)];
+  grid.appendChild(cell);
+}
+const cachedCells = Array.from(grid.children); // FIX: cached once, never re-queried
+setInterval(() => {
+  const idx = Math.floor(Math.random() * cachedCells.length);
+  cachedCells[idx].className = 'threat-cell ' + levels[Math.floor(Math.random() * levels.length)];
+}, 200);
+
+/* ═══ DASHBOARD COUNTERS ═══ */
+function animateNum(el, target, duration = 2000) {
+  let start = 0;
+  const step = target / (duration / 16);
+  const t = setInterval(() => {
+    start += step;
+    if (start >= target) { el.textContent = target; clearInterval(t); return; }
+    el.textContent = Math.floor(start);
+  }, 16);
+}
+setTimeout(() => {
+  animateNum(document.getElementById('dm1'), 1247, 2000);
+  animateNum(document.getElementById('dm2'), 7, 1000);
+  animateNum(document.getElementById('dm3'), 3891, 2500);
+}, 800);
+
+/* ═══ SCROLL REVEAL ═══ */
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+/* ═══ COUNTER ANIMATION ═══ */
+const counters = document.querySelectorAll('.counter');
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    let current = 0;
+    const duration = 1800;
+    const step = target / (duration / 16);
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= target) {
+        el.textContent = target + suffix;
+        clearInterval(timer);
+      } else {
+        el.textContent = Math.floor(current) + suffix;
+      }
+    }, 16);
+    counterObserver.unobserve(el);
+  });
+}, { threshold: 0.5 });
+counters.forEach(c => counterObserver.observe(c));
+
+/* ═══════════════════════════════════════════════════════════════
+   NETWORK CANVAS
+   FIX: pause rAF loop when canvas is off-screen via IntersectionObserver
+═══════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('netCanvas');
+const ctx = canvas.getContext('2d');
+let animFrame = null;
+let canvasVisible = false;
+
+function resizeCanvas() {
+  const container = document.getElementById('network-canvas');
+  canvas.width = container.offsetWidth;
+  canvas.height = container.offsetHeight;
+}
+resizeCanvas();
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resizeCanvas, 150); // FIX: debounce resize
+});
+
+const nodes = [];
+const NODE_COUNT = 20;
+for (let i = 0; i < NODE_COUNT; i++) {
+  nodes.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.6,
+    vy: (Math.random() - 0.5) * 0.6,
+    r: Math.random() * 3 + 2,
+    type: Math.random() < 0.15 ? 'threat' : Math.random() < 0.3 ? 'warning' : 'safe',
+    pulse: Math.random() * Math.PI * 2
+  });
+}
+
+function drawNetwork() {
+  if (!canvasVisible) { animFrame = null; return; } // FIX: stop if off-screen
+  animFrame = requestAnimationFrame(drawNetwork);
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  nodes.forEach(n => {
+    n.x += n.vx; n.y += n.vy; n.pulse += 0.04;
+    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+  });
+
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 130) {
+        const alpha = (1 - dist / 130) * 0.3;
+        ctx.strokeStyle = (nodes[i].type === 'threat' || nodes[j].type === 'threat')
+          ? `rgba(255,46,76,${alpha})`
+          : `rgba(0,255,136,${alpha})`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  nodes.forEach(n => {
+    const color = n.type === 'threat' ? '#ff2e4c' : n.type === 'warning' ? '#ff6b35' : '#00ff88';
+    const glow  = n.type === 'threat' ? 'rgba(255,46,76,0.3)' : n.type === 'warning' ? 'rgba(255,107,53,0.3)' : 'rgba(0,255,136,0.3)';
+    const pSize = (Math.sin(n.pulse) * 0.5 + 0.5) * 10 + n.r;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, pSize, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  });
+}
+
+// FIX: only run canvas animation when visible
+const canvasObserver = new IntersectionObserver(entries => {
+  canvasVisible = entries[0].isIntersecting;
+  if (canvasVisible && !animFrame) {
+    drawNetwork(); // restart loop
+  }
+}, { threshold: 0.1 });
+canvasObserver.observe(document.getElementById('network-canvas'));
+</script>
+</body>
+</html>
