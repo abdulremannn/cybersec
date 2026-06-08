@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,11 +48,6 @@ body {
   cursor: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CUSTOM CURSOR
-   FIX: removed mix-blend-mode (expensive compositing layer)
-        ring lag now handled by CSS transition instead of setTimeout
-═══════════════════════════════════════════════════════════════ */
 #cursor {
   position: fixed;
   width: 12px; height: 12px;
@@ -73,16 +67,11 @@ body {
   pointer-events: none;
   z-index: 9998;
   transform: translate(-50%, -50%);
-  /* FIX: CSS transition handles the lag visually — no setTimeout needed */
   transition: left 0.1s ease, top 0.1s ease, width 0.2s, height 0.2s, border-color 0.2s;
   will-change: left, top;
 }
 body:hover #cursor { opacity: 1; }
 
-/* ═══════════════════════════════════════════════════════════════
-   SCANLINE OVERLAY
-   FIX: added will-change to isolate to its own GPU layer
-═══════════════════════════════════════════════════════════════ */
 body::after {
   content: '';
   position: fixed;
@@ -99,10 +88,6 @@ body::after {
   will-change: transform;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NOISE TEXTURE
-   FIX: added will-change to isolate to its own GPU layer
-═══════════════════════════════════════════════════════════════ */
 body::before {
   content: '';
   position: fixed;
@@ -114,9 +99,6 @@ body::before {
   will-change: transform;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   NAVIGATION
-═══════════════════════════════════════════════════════════════ */
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -222,9 +204,6 @@ nav.scrolled {
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-/* ═══════════════════════════════════════════════════════════════
-   HERO SECTION
-═══════════════════════════════════════════════════════════════ */
 #hero {
   min-height: 100vh;
   display: flex;
@@ -249,7 +228,6 @@ nav.scrolled {
   to { transform: translateY(60px); }
 }
 
-/* FIX: will-change on glow elements to promote to own compositing layer */
 .hero-glow {
   position: absolute;
   width: 800px; height: 800px;
@@ -574,9 +552,6 @@ nav.scrolled {
   50% { height: 60px; opacity: 0.4; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   STATS SECTION
-═══════════════════════════════════════════════════════════════ */
 #stats {
   padding: 100px 48px;
   background: var(--deep);
@@ -693,9 +668,6 @@ nav.scrolled {
   letter-spacing: 1px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   SERVICES SECTION
-═══════════════════════════════════════════════════════════════ */
 #services {
   padding: 120px 48px;
   position: relative;
@@ -776,7 +748,35 @@ nav.scrolled {
   color: var(--text-dim);
   line-height: 1.7;
   font-weight: 300;
+  margin-bottom: 20px;
+}
+.service-bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 28px;
+}
+.service-bullets li {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 300;
+  line-height: 1.6;
+  padding-left: 18px;
+  position: relative;
+}
+.service-bullets li::before {
+  content: '//';
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--green);
+  position: absolute;
+  left: 0;
+  top: 1px;
+}
+.service-bullets li strong {
+  color: var(--text);
+  font-weight: 600;
 }
 .service-tags {
   display: flex;
@@ -797,9 +797,6 @@ nav.scrolled {
   border-color: rgba(0,255,136,0.4);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   METHODOLOGY SECTION
-═══════════════════════════════════════════════════════════════ */
 #methodology {
   padding: 120px 48px;
   background: var(--deep);
@@ -863,9 +860,6 @@ nav.scrolled {
   text-transform: uppercase;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   INDUSTRIES SECTION
-═══════════════════════════════════════════════════════════════ */
 #industries {
   padding: 120px 48px;
 }
@@ -922,9 +916,6 @@ nav.scrolled {
   letter-spacing: 0.5px;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   WHY US SECTION
-═══════════════════════════════════════════════════════════════ */
 #why {
   padding: 120px 48px;
   background: var(--deep);
@@ -1024,9 +1015,6 @@ nav.scrolled {
   vertical-align: middle;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LIVE THREAT FEED
-═══════════════════════════════════════════════════════════════ */
 #threat-feed {
   padding: 60px 0;
   background: var(--surface);
@@ -1060,9 +1048,6 @@ nav.scrolled {
 .ticker-dot.orange { background: var(--orange); }
 .ticker-dot.green { background: var(--green); }
 
-/* ═══════════════════════════════════════════════════════════════
-   NETWORK VISUALIZATION
-═══════════════════════════════════════════════════════════════ */
 #network {
   padding: 120px 48px;
   position: relative;
@@ -1128,9 +1113,6 @@ nav.scrolled {
   from { width: 0; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CTA SECTION
-═══════════════════════════════════════════════════════════════ */
 #cta {
   padding: 140px 48px;
   text-align: center;
@@ -1190,9 +1172,6 @@ nav.scrolled {
   flex-wrap: wrap;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CONTACT / FOOTER
-═══════════════════════════════════════════════════════════════ */
 #contact {
   padding: 80px 48px;
   background: var(--surface);
@@ -1271,9 +1250,6 @@ nav.scrolled {
 }
 .footer-tagline span { color: var(--green); }
 
-/* ═══════════════════════════════════════════════════════════════
-   SCROLL ANIMATIONS
-═══════════════════════════════════════════════════════════════ */
 .reveal {
   opacity: 0;
   transform: translateY(40px);
@@ -1289,9 +1265,6 @@ nav.scrolled {
 .reveal-delay-4 { transition-delay: 0.4s; }
 .reveal-delay-5 { transition-delay: 0.5s; }
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE
-═══════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   nav { padding: 0 24px; }
   .nav-links { display: none; }
@@ -1317,7 +1290,6 @@ nav.scrolled {
   .methodology-timeline { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Glitch effect */
 @keyframes glitch {
   0% { text-shadow: 2px 0 var(--red), -2px 0 var(--blue); }
   25% { text-shadow: -2px 0 var(--red), 2px 0 var(--blue); }
@@ -1327,7 +1299,6 @@ nav.scrolled {
 }
 .glitch:hover { animation: glitch 0.3s ease infinite; }
 
-/* Marquee */
 .marquee-container {
   overflow: hidden;
   padding: 20px 0;
@@ -1370,7 +1341,7 @@ nav.scrolled {
 <div id="cursor"></div>
 <div id="cursor-ring"></div>
 
-<!-- ═══ NAVIGATION ═══ -->
+<!-- NAV -->
 <nav id="navbar">
   <a href="#" class="nav-logo">
     <div class="nav-logo-icon"></div>
@@ -1392,7 +1363,7 @@ nav.scrolled {
   </div>
 </nav>
 
-<!-- ═══ HERO ═══ -->
+<!-- HERO -->
 <section id="hero">
   <div class="hero-grid"></div>
   <div class="hero-glow"></div>
@@ -1498,7 +1469,7 @@ nav.scrolled {
   </div>
 </div>
 
-<!-- ═══ STATS ═══ -->
+<!-- STATS -->
 <section id="stats">
   <div class="stats-header reveal">
     <div class="section-label">FBI IC3 Report 2023</div>
@@ -1544,7 +1515,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ LIVE THREAT FEED ═══ -->
+<!-- LIVE THREAT FEED -->
 <div id="threat-feed">
   <div class="threat-ticker" id="ticker">
     <div class="ticker-item"><span class="ticker-dot red"></span>CRITICAL — Ransomware campaign targeting healthcare sector detected</div>
@@ -1566,84 +1537,133 @@ nav.scrolled {
   </div>
 </div>
 
-<!-- ═══ SERVICES ═══ -->
+<!-- SERVICES -->
 <section id="services">
   <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
     <div class="section-label">What We Do</div>
     <h2 class="section-title">OUR <span class="dim">SERVICES</span></h2>
   </div>
   <div class="services-grid">
+
     <div class="service-card reveal">
       <div class="service-num">01</div>
       <div class="service-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       </div>
-      <div class="service-name">PENETRATION TESTING</div>
-      <div class="service-desc">We simulate real-world attacks against your web applications, APIs, mobile apps, cloud infrastructure, and internal networks — finding what attackers would find, before they do.</div>
+      <div class="service-name">EXTERNAL ATTACK SURFACE MANAGEMENT & OSINT</div>
+      <div class="service-desc">See your organization through the eyes of an attacker before they strike. We map your company's entire digital footprint using advanced Open Source Intelligence to find exposed entry points that traditional scanners miss.</div>
+      <ul class="service-bullets">
+        <li><strong>Exposed Data & Credential Audits:</strong> Scanning dark web sources and breach repositories for leaked corporate emails, employee credentials, and exposed API keys.</li>
+        <li><strong>Shadow IT Discovery:</strong> Identifying forgotten subdomains, unmapped staging servers, and legacy systems left exposed to the public internet.</li>
+        <li><strong>Source Code Leak Detection:</strong> Monitoring public repositories for accidental leaks of proprietary company code or hardcoded credentials.</li>
+      </ul>
       <div class="service-tags">
-        <span class="service-tag">Web Apps</span>
-        <span class="service-tag">APIs</span>
-        <span class="service-tag">Mobile</span>
-        <span class="service-tag">Cloud</span>
-        <span class="service-tag">Networks</span>
+        <span class="service-tag">OSINT</span>
+        <span class="service-tag">Dark Web</span>
+        <span class="service-tag">Shadow IT</span>
+        <span class="service-tag">Credential Audit</span>
       </div>
     </div>
+
     <div class="service-card reveal reveal-delay-1">
       <div class="service-num">02</div>
       <div class="service-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
       </div>
-      <div class="service-name">RED TEAM OPERATIONS</div>
-      <div class="service-desc">Full-scope adversarial simulations that test your people, processes, and technology simultaneously. We think like APT groups to validate your true security posture.</div>
+      <div class="service-name">WEB APPLICATION PENETRATION TESTING</div>
+      <div class="service-desc">Secure your customer-facing platforms and portals. Comprehensive, manual-first security testing of your web applications to identify vulnerabilities that put your data and user sessions at risk.</div>
+      <ul class="service-bullets">
+        <li><strong>OWASP Top 10 Coverage:</strong> Testing for critical flaws including SQL Injection, Cross-Site Scripting, and Broken Authentication.</li>
+        <li><strong>Business Logic Testing:</strong> Ensuring users cannot manipulate workflows, bypass payment gateways, or access other users' private data.</li>
+      </ul>
       <div class="service-tags">
-        <span class="service-tag">Adversary Sim</span>
-        <span class="service-tag">Social Engineering</span>
-        <span class="service-tag">Physical</span>
+        <span class="service-tag">OWASP Top 10</span>
+        <span class="service-tag">SQL Injection</span>
+        <span class="service-tag">XSS</span>
+        <span class="service-tag">IDOR</span>
       </div>
     </div>
+
     <div class="service-card reveal reveal-delay-2">
       <div class="service-num">03</div>
       <div class="service-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6l10.5 6L22 6"/><rect x="1" y="4" width="21" height="16" rx="2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
       </div>
-      <div class="service-name">THREAT INTELLIGENCE</div>
-      <div class="service-desc">Proactive monitoring of threat actors, dark web marketplaces, and intelligence feeds. We track adversaries so you're never blindsided by emerging attack campaigns.</div>
+      <div class="service-name">MOBILE APPLICATION SECURITY TESTING</div>
+      <div class="service-desc">Protect your iOS and Android applications from reverse-engineering and data theft. In-depth static and dynamic analysis of your mobile applications to ensure secure data handling and communication.</div>
+      <ul class="service-bullets">
+        <li><strong>Local Data Storage Audits:</strong> Ensuring sensitive user data, tokens, and credentials are not stored insecurely on the device.</li>
+        <li><strong>API Communication Security:</strong> Verifying that the app communicates securely with backend servers and cannot be intercepted.</li>
+      </ul>
       <div class="service-tags">
-        <span class="service-tag">Threat Hunting</span>
-        <span class="service-tag">Dark Web</span>
-        <span class="service-tag">IOC Monitoring</span>
+        <span class="service-tag">iOS</span>
+        <span class="service-tag">Android</span>
+        <span class="service-tag">Static Analysis</span>
+        <span class="service-tag">Dynamic Analysis</span>
       </div>
     </div>
+
     <div class="service-card reveal">
       <div class="service-num">04</div>
       <div class="service-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       </div>
-      <div class="service-name">INCIDENT RESPONSE</div>
-      <div class="service-desc">When breaches happen, speed is survival. Our DFIR team deploys rapidly to contain threats, preserve evidence, investigate root causes, and restore operations.</div>
+      <div class="service-name">API & MICROSERVICES SECURITY TESTING</div>
+      <div class="service-desc">Secure the engines driving your modern applications. Deep-dive vulnerability assessments of REST, GraphQL, and gRPC endpoints to prevent unauthorized access and data breaches at the integration layer.</div>
+      <ul class="service-bullets">
+        <li><strong>Bypassing Authentication:</strong> Testing if API endpoints can be accessed without proper tokens or permissions.</li>
+        <li><strong>Rate Limiting & Denial of Service:</strong> Ensuring your APIs cannot be flooded or abused to crash your backend services.</li>
+      </ul>
       <div class="service-tags">
-        <span class="service-tag">DFIR</span>
-        <span class="service-tag">Forensics</span>
-        <span class="service-tag">Recovery</span>
+        <span class="service-tag">REST</span>
+        <span class="service-tag">GraphQL</span>
+        <span class="service-tag">gRPC</span>
+        <span class="service-tag">Auth Bypass</span>
       </div>
     </div>
+
     <div class="service-card reveal reveal-delay-1">
       <div class="service-num">05</div>
       <div class="service-icon-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
       </div>
-      <div class="service-name">VULNERABILITY ASSESSMENT</div>
-      <div class="service-desc">Systematic identification and risk-prioritized analysis of vulnerabilities across your attack surface. We provide actionable remediation roadmaps, not just raw reports.</div>
+      <div class="service-name">NETWORK & INFRASTRUCTURE VAPT</div>
+      <div class="service-desc">Harden your core infrastructure against unauthorized access. We test your internal and external network infrastructure to identify unpatched systems, weak configurations, and entry points.</div>
+      <ul class="service-bullets">
+        <li><strong>External Network Testing:</strong> Evaluating public-facing assets like firewalls, VPN gateways, and routers.</li>
+        <li><strong>Internal Network Assessment:</strong> Simulating a compromised internal device to evaluate how easily an attacker could move laterally through your corporate network.</li>
+      </ul>
       <div class="service-tags">
-        <span class="service-tag">Risk Scoring</span>
-        <span class="service-tag">Asset Inventory</span>
-        <span class="service-tag">Remediation</span>
+        <span class="service-tag">Firewall</span>
+        <span class="service-tag">VPN</span>
+        <span class="service-tag">Lateral Movement</span>
+        <span class="service-tag">VAPT</span>
       </div>
     </div>
+
+    <div class="service-card reveal reveal-delay-2">
+      <div class="service-num">06</div>
+      <div class="service-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <div class="service-name">REGULATORY & COMPLIANCE VAPT</div>
+      <div class="service-desc">Achieve seamless compliance with local and international security frameworks. We deliver audit-ready VAPT reports designed to satisfy the strict requirements of regulatory bodies in Pakistan.</div>
+      <ul class="service-bullets">
+        <li><strong>SBP Cyber Shield Compliance:</strong> Specialized testing and documentation mapped to the State Bank of Pakistan's cybersecurity frameworks for Banks, EMIs, and Fintechs.</li>
+        <li><strong>SECP Circular Alignment:</strong> Helping corporate entities, insurance firms, and NBFCs meet mandatory Securities and Commission of Pakistan VAPT directives.</li>
+      </ul>
+      <div class="service-tags">
+        <span class="service-tag">SBP</span>
+        <span class="service-tag">SECP</span>
+        <span class="service-tag">Compliance</span>
+        <span class="service-tag">Audit-Ready</span>
+      </div>
+    </div>
+
   </div>
 </section>
 
-<!-- ═══ METHODOLOGY ═══ -->
+<!-- METHODOLOGY -->
 <section id="methodology">
   <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
     <div class="section-label">Our Process</div>
@@ -1660,7 +1680,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ INDUSTRIES ═══ -->
+<!-- INDUSTRIES -->
 <section id="industries">
   <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
     <div class="section-label">Verticals</div>
@@ -1678,7 +1698,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ WHY US ═══ -->
+<!-- WHY US -->
 <section id="why">
   <div class="stats-header reveal" style="text-align:center;margin-bottom:72px;">
     <div class="section-label">Differentiators</div>
@@ -1749,7 +1769,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ NETWORK VISUALIZATION ═══ -->
+<!-- NETWORK VISUALIZATION -->
 <section id="network">
   <div class="network-container">
     <div>
@@ -1780,7 +1800,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ CTA ═══ -->
+<!-- CTA -->
 <section id="cta">
   <div class="cta-label">Urgent Action Required</div>
   <h2 class="cta-headline glitch">KNOW YOUR<br>VULNERABILITIES<br>BEFORE ATTACKERS DO.</h2>
@@ -1794,7 +1814,7 @@ nav.scrolled {
   </div>
 </section>
 
-<!-- ═══ CONTACT / FOOTER ═══ -->
+<!-- FOOTER -->
 <footer id="contact">
   <div class="contact-grid">
     <div class="contact-brand">
@@ -1816,11 +1836,12 @@ nav.scrolled {
     <div>
       <div class="contact-section-title">Services</div>
       <ul class="contact-links">
-        <li><a href="#">Penetration Testing</a></li>
-        <li><a href="#">Red Team Operations</a></li>
-        <li><a href="#">Threat Intelligence</a></li>
-        <li><a href="#">Incident Response</a></li>
-        <li><a href="#">Vulnerability Assessment</a></li>
+        <li><a href="#">Attack Surface Management</a></li>
+        <li><a href="#">Web App Penetration Testing</a></li>
+        <li><a href="#">Mobile App Security Testing</a></li>
+        <li><a href="#">API & Microservices Security</a></li>
+        <li><a href="#">Network & Infrastructure VAPT</a></li>
+        <li><a href="#">Regulatory & Compliance VAPT</a></li>
       </ul>
     </div>
     <div>
@@ -1852,12 +1873,6 @@ nav.scrolled {
 </footer>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   CURSOR
-   FIX 1: rAF throttle instead of mousemove directly writing styles
-   FIX 2: ring lag handled by CSS transition — no setTimeout
-   FIX 3: removed mix-blend-mode from CSS
-═══════════════════════════════════════════════════════════════ */
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursor-ring');
 let cursorTicking = false;
@@ -1895,7 +1910,6 @@ document.querySelectorAll('a, button, .service-card, .industry-card, .why-item')
   });
 });
 
-/* ═══ NAV SCROLL ═══ */
 const navbar = document.getElementById('navbar');
 let scrollTicking = false;
 window.addEventListener('scroll', () => {
@@ -1908,10 +1922,6 @@ window.addEventListener('scroll', () => {
   }
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   THREAT HEATMAP
-   FIX: cache cells array once — no DOM query inside interval
-═══════════════════════════════════════════════════════════════ */
 const grid = document.getElementById('threatGrid');
 const levels = ['', '', '', 'low', 'low', 'med', 'high', 'critical'];
 for (let i = 0; i < 160; i++) {
@@ -1919,13 +1929,12 @@ for (let i = 0; i < 160; i++) {
   cell.className = 'threat-cell ' + levels[Math.floor(Math.random() * levels.length)];
   grid.appendChild(cell);
 }
-const cachedCells = Array.from(grid.children); // FIX: cached once, never re-queried
+const cachedCells = Array.from(grid.children);
 setInterval(() => {
   const idx = Math.floor(Math.random() * cachedCells.length);
   cachedCells[idx].className = 'threat-cell ' + levels[Math.floor(Math.random() * levels.length)];
 }, 200);
 
-/* ═══ DASHBOARD COUNTERS ═══ */
 function animateNum(el, target, duration = 2000) {
   let start = 0;
   const step = target / (duration / 16);
@@ -1941,7 +1950,6 @@ setTimeout(() => {
   animateNum(document.getElementById('dm3'), 3891, 2500);
 }, 800);
 
-/* ═══ SCROLL REVEAL ═══ */
 const revealEls = document.querySelectorAll('.reveal');
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(e => {
@@ -1950,7 +1958,6 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.1 });
 revealEls.forEach(el => revealObserver.observe(el));
 
-/* ═══ COUNTER ANIMATION ═══ */
 const counters = document.querySelectorAll('.counter');
 const counterObserver = new IntersectionObserver((entries) => {
   entries.forEach(e => {
@@ -1975,10 +1982,6 @@ const counterObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 counters.forEach(c => counterObserver.observe(c));
 
-/* ═══════════════════════════════════════════════════════════════
-   NETWORK CANVAS
-   FIX: pause rAF loop when canvas is off-screen via IntersectionObserver
-═══════════════════════════════════════════════════════════════ */
 const canvas = document.getElementById('netCanvas');
 const ctx = canvas.getContext('2d');
 let animFrame = null;
@@ -1994,7 +1997,7 @@ resizeCanvas();
 let resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(resizeCanvas, 150); // FIX: debounce resize
+  resizeTimer = setTimeout(resizeCanvas, 150);
 });
 
 const nodes = [];
@@ -2012,7 +2015,7 @@ for (let i = 0; i < NODE_COUNT; i++) {
 }
 
 function drawNetwork() {
-  if (!canvasVisible) { animFrame = null; return; } // FIX: stop if off-screen
+  if (!canvasVisible) { animFrame = null; return; }
   animFrame = requestAnimationFrame(drawNetwork);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2057,11 +2060,10 @@ function drawNetwork() {
   });
 }
 
-// FIX: only run canvas animation when visible
 const canvasObserver = new IntersectionObserver(entries => {
   canvasVisible = entries[0].isIntersecting;
   if (canvasVisible && !animFrame) {
-    drawNetwork(); // restart loop
+    drawNetwork();
   }
 }, { threshold: 0.1 });
 canvasObserver.observe(document.getElementById('network-canvas'));
